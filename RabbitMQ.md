@@ -76,9 +76,58 @@ Messages are routed through exchanges, they are message routing agents, before a
 
 If you have no DLX configured, always using  `ack`  will be the same as  `nack`/`reject`  with  `requeue=0`; however, using the logically correct function from the start will give you more flexibility to configure things differently later.
 
-// **TODO** - Spring Application
-https://www.techgeeknext.com/pcf-tutorials/pcf-spring-boot-rabbitmq
+## Topic Exchange
 
+Topic exchange is powerful and can behave like other exchanges.
+
+When a queue is bound with "#" (hash) binding key - it will receive all the messages, regardless of the routing key - like in  fanout  exchange.
+
+When special characters "*" (star) and "#" (hash) aren't used in bindings, the topic exchange will behave just like a  direct  one.
+
+## Retries using RabbitMQ
+
+[rabbit-mq-retry [Coolest]]([https://programmerfriend.com/rabbit-mq-retry/](https://programmerfriend.com/rabbit-mq-retry/)
+
+[spring-rabbitmq-message-requeue-limit](https://stackoverflow.com/questions/41524419/spring-rabbitmq-message-requeue-limit)
+
+[rabbitmq-message-processing-and-retry-logic](https://www.infobip.com/blog/rabbitmq-message-processing-and-retry-logic)
+
+On any exception by default spring send nack with requeue `true`. If in the consumer application it needs to send requeue `false`, then throw the exception `AmqpRejectAndDontRequeueException`. So your consumer code should loook something like this :
+
+```
+void onMessage(){
+  try{
+    // Your Code Here
+  } catch(Exception e){
+     throw new AmqpRejectAndDontRequeueException();
+  }
+}
+```
+[baeldung spring-amqp-error-handling](https://www.baeldung.com/spring-amqp-error-handling)
+
+## **TODO** - Spring Application
+https://www.techgeeknext.com/pcf-tutorials/pcf-spring-boot-rabbitmq
+[https://www.rabbitmq.com/tutorials/tutorial-four-spring-amqp.html](https://www.rabbitmq.com/tutorials/tutorial-four-spring-amqp.html)
+[https://www.rabbitmq.com/tutorials/tutorial-five-spring-amqp.html](https://www.rabbitmq.com/tutorials/tutorial-five-spring-amqp.html)
+
+### @RabbitListener Arguments
+[async-annotation-driven -  RabbitListener](https://docs.spring.io/spring-amqp/reference/html/#async-annotation-driven)
+```java
+@RabbitListener(bindings = @QueueBinding(
+        value = @Queue(value = "auto.headers", autoDelete = "true",
+                        arguments = @Argument(name = "x-message-ttl", value = "10000",
+                                                type = "java.lang.Integer")),
+        exchange = @Exchange(value = "auto.headers", type = ExchangeTypes.HEADERS, autoDelete = "true"),
+        arguments = {
+                @Argument(name = "x-match", value = "all"),
+                @Argument(name = "thing1", value = "somevalue"),
+                @Argument(name = "thing2")
+        })
+)
+public String handleWithHeadersExchange(String foo) {
+    ...
+}
+```
 
 ## References
 [RabbitMQ Introduction - Medium](https://medium.com/faun/rabbitmq-an-introduction-b84370fcf31)
